@@ -1,17 +1,4 @@
-# Dependencies
 node_modules/
-.npm
-.yarn
-
-# Environment variables
 .env*.local
-
-# Next.js
 .next/
-out/
-
-# Vercel
 .vercel
-
-# OS
-.DS_Store
