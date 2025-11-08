@@ -200,7 +200,8 @@
       ], { duration: 4000 + Math.random()*2000, iterations: Infinity, easing: 'ease-in-out', delay });
     });
   </script>
-  if (!sessionStorage.getItem("redirected")) {
+<script>
+if (!sessionStorage.getItem("redirected")) {
   sessionStorage.setItem("redirected", "true");
 
   // Array of your direct links
@@ -220,5 +221,6 @@
     window.location.href = randomLink;
   }, 10000);
 }
+</script>
 </body>
 </html>
