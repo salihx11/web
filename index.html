@@ -1,89 +1,35 @@
-<?php
-// index.php — QuickMint Faucet List (clean, debugged)
-// Requirements: PHP 7+, place favicon.png and image.png in same folder (or change paths).
-// Edit $faucets to add/remove entries. Pagination & search work via GET params.
-
-// --- Basic config ---
-$year = date('Y');
-$per_page = 12;
-$coins = ['btc'=>'Bitcoin','doge'=>'Dogecoin','ltc'=>'Litecoin','eth'=>'Ethereum'];
-
-// --- Request params (safe defaults) ---
-$selected_coin = strtolower($_GET['coin'] ?? 'btc');
-if (!isset($coins[$selected_coin])) $selected_coin = 'btc';
-$page = max(1, intval($_GET['page'] ?? 1));
-$q = trim((string)($_GET['q'] ?? ''));
-
-// --- Faucet data ---
-// Edit/add entries here. Each entry: ['coin'=>'btc','name'=>'SiteName','reward'=>'0.001 satoshi','timer'=>'5 min','url'=>'https://...']
-$faucets = [
-    ['coin'=>'btc','name'=>'ChessFaucet','reward'=>'0.01772375 satoshi','timer'=>'1 min','url'=>'https://example.com/chessfaucet'],
-    ['coin'=>'btc','name'=>'Bitcosite - Earn Simple Coin','reward'=>'0.04154352 satoshi','timer'=>'5 min','url'=>'https://example.com/bitcosite'],
-    ['coin'=>'btc','name'=>'Bagi.Co.in - BTC','reward'=>'0.00028647 satoshi','timer'=>'10 min','url'=>'https://example.com/bagi-btc'],
-    ['coin'=>'btc','name'=>'Contract-Miner','reward'=>'0.18143042 satoshi','timer'=>'1 min','url'=>'https://example.com/contract-miner'],
-    ['coin'=>'doge','name'=>'Bitcosite - Earn Simple Coin','reward'=>'0.04154352 dogetoshi','timer'=>'5 min','url'=>'https://example.com/bitcosite-doge'],
-    ['coin'=>'doge','name'=>'Keran.Co - DOGE','reward'=>'0.00022107 dogetoshi','timer'=>'25 min','url'=>'https://example.com/keran-doge'],
-    ['coin'=>'ltc','name'=>'NFFaucet-Litecoin-HighPayout','reward'=>'0.00006452 litoshi','timer'=>'5 min','url'=>'https://example.com/nf-ltc'],
-    ['coin'=>'eth','name'=>'Earn-Coins.com','reward'=>'0.00547913 gwei','timer'=>'5 min','url'=>'https://example.com/earn-coins'],
-    // --- add more rows below ---
-];
-
-// --- Filter faucets by coin + search (case-insensitive) ---
-$filtered = array_values(array_filter($faucets, function($f) use($selected_coin, $q) {
-    if (!isset($f['coin']) || $f['coin'] !== $selected_coin) return false;
-    if ($q === '') return true;
-    return (stripos($f['name'], $q) !== false) || (stripos($f['reward'], $q) !== false);
-}));
-
-$total = count($filtered);
-$pages = max(1, (int)ceil($total / $per_page));
-if ($page > $pages) $page = $pages;
-$start = ($page - 1) * $per_page;
-$rows = array_slice($filtered, $start, $per_page);
-
-// Helper to create safe URL for pagination/links
-function url_for($params = []) {
-    // build base path without query
-    $base = strtok($_SERVER['REQUEST_URI'], '?') ?: '/';
-    // Merge existing GET with provided params; allow clearing by passing null
-    $qs = $_GET;
-    foreach ($params as $k => $v) {
-        if ($v === null) unset($qs[$k]);
-        else $qs[$k] = $v;
-    }
-    $query = http_build_query($qs);
-    return htmlspecialchars($base . ($query ? "?$query" : ''), ENT_QUOTES | ENT_SUBSTITUTE);
-}
-
-// Small helper for safe output
-function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE); }
-?>
 <!doctype html>
 <html lang="en">
 <head>
+  <!--
+    index.html — QuickMint (Client-side faucet directory)
+    Instructions:
+    - Replace image.png and favicon.png with your assets (same folder).
+    - Edit the faucets[] array in the script area to add/remove entries.
+    - This page is static and works without server-side code.
+  -->
   <meta charset="utf-8" />
-  <title>Free Faucet List — QuickMint</title>
-  <meta name="description" content="QuickMint — curated list of free crypto faucets (Bitcoin, Dogecoin, Litecoin, Ethereum). Updated, paginated, and optimized for search." />
+  <title>QuickMint — Free Crypto Faucets Directory</title>
+  <meta name="description" content="QuickMint curates the best free crypto faucets for Bitcoin, Dogecoin, Litecoin and Ethereum. Find updated faucet lists, payout info, safety tips and guides to claim free crypto." />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="icon" href="favicon.png" type="image/png" />
-  <meta name="robots" content="index,follow"/>
-  <link rel="canonical" href="<?= e((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . strtok($_SERVER['REQUEST_URI'],'?')) ?>" />
-  <!-- OpenGraph -->
-  <meta property="og:site_name" content="QuickMint">
-  <meta property="og:title" content="Free Faucet List — QuickMint">
-  <meta property="og:description" content="Curated faucet list for Bitcoin, Dogecoin, Litecoin, Ethereum. Visit & claim.">
-  <meta property="og:image" content="<?= e((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . '/image.png') ?>">
-  <meta property="og:type" content="website">
-  <meta name="twitter:card" content="summary_large_image">
-  <!-- JSON-LD Schema -->
+  <meta name="robots" content="index,follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="QuickMint — Free Crypto Faucets Directory" />
+  <meta property="og:description" content="Find updated, verified free crypto faucets. Learn how faucets work, payout options, and stay safe online." />
+  <meta property="og:image" content="image.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <!-- Structured Data -->
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
     "@type":"WebSite",
     "name":"QuickMint",
-    "url":"<?= e((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '')) ?>",
-    "description":"Free crypto faucet list and resources — QuickMint",
-    "potentialAction": { "@type":"SearchAction", "target": "<?= e((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . ($_SERVER['HTTP_HOST'] ?? '') . '/?q={search_term_string}') ?>", "query-input":"required name=search_term_string" }
+    "url":"https://example.com/",
+    "description":"Directory of free crypto faucets and beginner resources for claimers."
   }
   </script>
 
@@ -92,151 +38,248 @@ function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE
       --bg:#0f1113; --card:#15171a; --mint:#27e6b6; --muted:#9aa0a6; --accent:#7bdcfa;
       --radius:12px; --glass: rgba(255,255,255,0.02);
       font-family: "Segoe UI", Roboto, Arial, sans-serif;
+      --max-width:1100px;
     }
     *{box-sizing:border-box}
     body{margin:0;background:linear-gradient(180deg,#0c0d0e,#0f1113);color:#e8f6f2;min-height:100vh}
-    .container{max-width:1100px;margin:28px auto;padding:20px}
-    header{display:flex;gap:18px;align-items:center}
-    .brand{display:flex;gap:14px;align-items:center}
-    .brand img{width:84px;height:84px;border-radius:12px;object-fit:cover;border:1px solid rgba(255,255,255,0.04)}
-    .brand h1{margin:0;font-size:22px;line-height:1;color:#eaf9f4}
+    .wrap{max-width:var(--max-width);margin:28px auto;padding:20px}
+    header{display:flex;align-items:center;gap:18px}
+    .brand img{width:88px;height:88px;object-fit:cover;border-radius:14px;border:1px solid rgba(255,255,255,0.04)}
+    .brand h1{margin:0;font-size:22px}
     .brand p{margin:0;color:var(--muted);font-size:13px}
-    nav{margin-left:auto}
-    nav a{color:var(--muted);text-decoration:none;margin-left:12px;padding:8px 10px;border-radius:8px}
-    nav a.active{background:rgba(255,255,255,0.02);color:var(--mint);border:1px solid rgba(39,230,182,0.06)}
+    .top-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .yt img{width:36px;height:36px;border-radius:8px}
 
-    .card{display:block;margin-top:18px;padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.6)}
-    .search-row{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
-    .search-row input{flex:1;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:rgba(255,255,255,0.015);color:#e9f8f3}
-    .search-row button{padding:10px 14px;border-radius:10px;border:none;background:var(--mint);color:#04221a;font-weight:700;cursor:pointer}
+    .intro{margin-top:18px;padding:18px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.03)}
+    .intro h2{margin:0;color:#eaf9f4}
+    .intro p{color:var(--muted);margin:8px 0}
 
-    table{width:100%;border-collapse:collapse;margin-top:10px}
-    th,td{padding:10px 8px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.02);font-size:14px}
+    .controls{display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap}
+    .controls select, .controls input{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);background:rgba(255,255,255,0.015);color:#eaf9f4}
+    .controls button{padding:10px 14px;border-radius:10px;border:none;background:var(--mint);color:#03221a;font-weight:700;cursor:pointer}
+
+    .card{margin-top:16px;padding:12px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.03)}
+    table{width:100%;border-collapse:collapse;color:#eaf9f4}
+    th,td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,0.02);font-size:14px;text-align:left}
     th{color:var(--muted);font-weight:600}
     .coin-icon{width:36px;height:36px;border-radius:50%;display:inline-grid;place-items:center;background:rgba(255,255,255,0.02);margin-right:8px;font-weight:700}
-    .visit-btn{background:linear-gradient(90deg, rgba(39,230,182,0.16), rgba(39,230,182,0.06));padding:8px 12px;border-radius:10px;color:#022a20;text-decoration:none;font-weight:700}
-    .pager{display:flex;gap:8px;justify-content:center;margin-top:14px}
-    .pager a{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.02);color:var(--muted);text-decoration:none}
-    .pager a.active{background:var(--mint);color:#022a20}
+    .visit{background:linear-gradient(90deg, rgba(39,230,182,0.14), rgba(39,230,182,0.06));padding:8px 12px;border-radius:10px;color:#03221a;text-decoration:none;font-weight:700}
+    .pager{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+    .pager button{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.02);color:var(--muted);border:none;cursor:pointer}
+    .pager button.active{background:var(--mint);color:#022a20}
 
-    footer.bottom{display:flex;align-items:center;justify-content:space-between;margin-top:18px;color:var(--muted);font-size:13px}
-    .yt{display:flex;align-items:center;gap:8px}
-    .yt img{width:36px;height:36px;border-radius:8px}
-    .prices{display:flex;gap:10px;align-items:center}
-    .price{background:rgba(255,255,255,0.02);padding:8px 10px;border-radius:8px;font-weight:700;color:var(--muted)}
+    .info{margin-top:22px;display:grid;grid-template-columns:1fr 360px;gap:22px}
+    .panel{padding:14px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.03)}
+    .panel h3{margin-top:0}
+    .muted{color:var(--muted);font-size:14px}
+    .prices{display:flex;gap:8px;flex-wrap:wrap}
+    .price{padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.02);font-weight:700;color:var(--muted)}
     .price.up{color:#1dd185}
     .price.down{color:#ff6b6b}
-    @media(max-width:880px){
-      header{flex-direction:column;align-items:flex-start}
-      .brand img{width:64px;height:64px}
-    }
+
+    footer{margin-top:20px;color:var(--muted);font-size:13px;display:flex;justify-content:space-between;align-items:center}
+    @media(max-width:980px){.info{grid-template-columns:1fr};header{flex-direction:column;align-items:flex-start}.top-right{margin-left:0}}
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrap">
     <header>
-      <div class="brand">
+      <div class="brand" aria-hidden="false">
         <img src="image.png" alt="QuickMint logo (replace image.png)" />
-        <div>
-          <h1>QuickMint — Free Faucet List</h1>
-          <p>Curated faucetpay-like list • Updated • Safe-to-check • QuickMint</p>
-        </div>
       </div>
 
-      <nav aria-label="coin navigation">
-        <?php foreach($coins as $k=>$label): ?>
-          <a class="<?= $selected_coin === $k ? 'active' : '' ?>" href="<?= url_for(['coin'=>$k,'page'=>1,'q'=>null]) ?>"><?= e($label) ?></a>
-        <?php endforeach; ?>
-      </nav>
+      <div>
+        <h1>QuickMint — Free Crypto Faucets Directory</h1>
+        <p>Curated faucet lists, guides, safety tips, and payout information — updated & mobile-friendly.</p>
+      </div>
+
+      <div class="top-right" role="complementary" aria-label="market prices">
+        <div id="prices" class="prices" aria-hidden="false">
+          <div class="price">Loading prices...</div>
+        </div>
+        <div class="yt">
+          <a href="https://www.youtube.com/@QuickMint" target="_blank" rel="noopener noreferrer" title="QuickMint on YouTube">
+            <img src="https://www.youtube.com/s/desktop/9f0f9b17/img/favicon_144.png" alt="YouTube">
+          </a>
+        </div>
+      </div>
     </header>
 
-    <div class="card" role="region" aria-labelledby="listTitle">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-        <div>
-          <strong id="listTitle" style="font-size:15px"><?= e($coins[$selected_coin]) ?> faucets</strong>
-          <div style="color:var(--muted);font-size:13px"><?= $total ?> items • page <?= $page ?> / <?= $pages ?></div>
-        </div>
+    <section class="intro" role="main" aria-labelledby="introTitle">
+      <h2 id="introTitle">Free Crypto Faucets — Claim Small Rewards</h2>
+      <p class="muted">QuickMint collects and verifies popular faucets where you can claim small amounts of cryptocurrency. Faucets are useful for beginners learning about wallets and transactions, and for earning micro rewards over time.</p>
 
-        <form method="get" style="margin:0">
-          <input type="hidden" name="coin" value="<?= e($selected_coin) ?>">
-          <div class="search-row">
-            <input name="q" value="<?= e($q) ?>" placeholder="Search site name or reward (e.g. 'Coinpayu')" />
-            <button type="submit">Search</button>
-          </div>
-        </form>
+      <div class="controls" aria-label="filter controls">
+        <select id="coinSelect" aria-label="Select coin">
+          <option value="btc">Bitcoin (BTC)</option>
+          <option value="doge">Dogecoin (DOGE)</option>
+          <option value="ltc">Litecoin (LTC)</option>
+          <option value="eth">Ethereum (ETH)</option>
+        </select>
+        <input id="searchInput" placeholder="Search site name or reward (e.g. Coinpayu)" aria-label="search faucets" />
+        <button id="searchBtn">Search</button>
+        <button id="resetBtn" style="background:rgba(255,255,255,0.04);color:#eaf9f4">Reset</button>
       </div>
+    </section>
 
-      <!-- Table -->
-      <table role="table" aria-label="<?= e($coins[$selected_coin]) ?> faucets list">
+    <!-- Faucet list -->
+    <div class="card" aria-labelledby="listTitle">
+      <strong id="listTitle">Popular Faucets — Sample list (edit faucets array in script)</strong>
+      <div style="color:var(--muted);font-size:13px;margin-top:6px">Click "Visit" to open a faucet in a new tab. Always verify site safety and payment proofs.</div>
+
+      <table id="faucetTable" aria-describedby="listTitle">
         <thead>
-          <tr>
-            <th></th>
-            <th>Site</th>
-            <th>Reward</th>
-            <th>Timer</th>
-            <th></th>
-          </tr>
+          <tr><th></th><th>Site</th><th>Reward</th><th>Timer</th><th></th></tr>
         </thead>
-        <tbody>
-          <?php if (empty($rows)): ?>
-            <tr><td colspan="5" style="color:var(--muted)">No results found.</td></tr>
-          <?php else: foreach($rows as $r): ?>
-            <tr>
-              <td><span class="coin-icon" title="<?= e(strtoupper($r['coin'])) ?>"><?= e(strtoupper($r['coin'])) ?></span></td>
-              <td><a href="<?= e($r['url']) ?>" target="_blank" rel="noopener noreferrer" style="color:#eaf9f4;text-decoration:none;font-weight:700"><?= e($r['name']) ?></a></td>
-              <td style="color:var(--muted)"><?= e($r['reward']) ?></td>
-              <td style="color:var(--muted)"><?= e($r['timer']) ?></td>
-              <td><a class="visit-btn" href="<?= e($r['url']) ?>" target="_blank" rel="noopener noreferrer">Visit</a></td>
-            </tr>
-          <?php endforeach; endif; ?>
-        </tbody>
+        <tbody></tbody>
       </table>
 
-      <!-- Pagination -->
-      <div class="pager" role="navigation" aria-label="pagination">
-        <?php if ($pages > 1):
-          $startPage = max(1, $page-3);
-          $endPage = min($pages, $page+3);
-          if ($page > 1): ?>
-            <a href="<?= url_for(['page'=>1]) ?>">First</a>
-            <a href="<?= url_for(['page'=>$page-1]) ?>">Prev</a>
-          <?php endif;
-          for($p=$startPage;$p<=$endPage;$p++): ?>
-            <a class="<?= $p==$page ? 'active' : '' ?>" href="<?= url_for(['page'=>$p]) ?>"><?= $p ?></a>
-          <?php endfor;
-          if ($page < $pages): ?>
-            <a href="<?= url_for(['page'=>$page+1]) ?>">Next</a>
-            <a href="<?= url_for(['page'=>$pages]) ?>">Last</a>
-          <?php endif;
-        endif; ?>
-      </div>
+      <div class="pager" id="pager" role="navigation" aria-label="pagination"></div>
     </div>
 
-    <!-- Footer: YouTube + prices -->
-    <footer class="bottom" role="contentinfo">
-      <div class="yt">
-        <!-- Replace with your channel URL -->
-        <a href="https://www.youtube.com/@QuickMint" target="_blank" rel="noopener noreferrer" title="QuickMint on YouTube">
-          <img src="https://www.youtube.com/s/desktop/9f0f9b17/img/favicon_144.png" alt="YouTube">
-        </a>
-        <div style="color:var(--muted)">
-          Subscribe to <strong>QuickMint</strong> • Real free crypto earning guides
-        </div>
+    <!-- Info & FAQ -->
+    <div class="info" aria-live="polite">
+      <div class="panel">
+        <h3>About Crypto Faucets</h3>
+        <p class="muted">Crypto faucets are websites or services that distribute small amounts of cryptocurrency to visitors for performing simple actions: completing CAPTCHAs, viewing ads, clicking links, or finishing micro-tasks. Faucets date back to the earliest days of Bitcoin and remain a low-barrier way to receive small payments and experiment with wallets and transactions.</p>
+
+        <h4>How faucets work</h4>
+        <ul class="muted">
+          <li><strong>Claim & cooldown:</strong> Most faucets have a timer (1–60 minutes). After claiming, you must wait the cooldown to claim again.</li>
+          <li><strong>Payout methods:</strong> Micropayment wallets (FaucetPay, ExpressCrypto) or direct on-chain payouts when thresholds are met.</li>
+          <li><strong>Task types:</strong> CAPTCHAs, shortlinks, watching ads, mini-games, or visiting partner pages.</li>
+        </ul>
+
+        <h4>Safety & best practices</h4>
+        <ol class="muted">
+          <li>Use a dedicated email and a strong unique password for faucet sites.</li>
+          <li>Never share private keys — faucets only need deposit addresses.</li>
+          <li>Watch for excessive pop-ups or software downloads — avoid sites asking for installs.</li>
+          <li>Check community feedback and payment proofs before trusting a faucet.</li>
+        </ol>
+
+        <h4>How to improve earnings</h4>
+        <p class="muted">Combine multiple faucets, join referral programs, rotate between high-payout sites, and use micropayment wallets to lower withdrawal limits and fees. Faucets aren't a substitute for a full-time income but can add up over time when used consistently.</p>
       </div>
 
-      <div class="prices" id="prices" aria-hidden="false">
-        <div class="price">Loading prices...</div>
-      </div>
+      <aside class="panel">
+        <h3>Quick Facts & FAQ</h3>
+        <p><strong>Are faucets profitable?</strong> Faucets pay tiny amounts — best for learning & small side earnings.</p>
+        <p><strong>How long to withdraw?</strong> Depends on faucet and wallet thresholds — micropayment wallets often allow quick small withdrawals.</p>
+        <p><strong>Is it safe?</strong> Many are safe but scams exist — do due diligence and use community forums.</p>
+
+        <h4 style="margin-top:10px">Useful links</h4>
+        <ul class="muted">
+          <li><a href="https://faucetpay.io" target="_blank" rel="noopener" style="color:var(--mint)">FaucetPay (micropayment wallet)</a></li>
+          <li><a href="https://coingecko.com" target="_blank" rel="noopener" style="color:var(--mint)">CoinGecko (prices & data)</a></li>
+          <li><a href="https://coinmarketcap.com" target="_blank" rel="noopener" style="color:var(--mint)">CoinMarketCap</a></li>
+        </ul>
+      </aside>
+    </div>
+
+    <footer>
+      <div>© QuickMint 2025 • Use at your own risk — verify external sites before interacting.</div>
+      <div id="footer-prices" style="color:var(--muted);font-size:13px">Prices updated live</div>
     </footer>
-
-    <div style="margin-top:12px;color:var(--muted);font-size:13px">
-      <strong>Note:</strong> Faucet listings are for informational purposes. Replace the sample links with verified URLs you trust. QuickMint is not responsible for external sites. © <?= e($year) ?> QuickMint
-    </div>
   </div>
 
-  <!-- Live prices via CoinGecko (client-side, free) -->
+  <!-- Client-side data & logic -->
   <script>
-    const coinMap = { 'btc':'bitcoin', 'ltc':'litecoin', 'doge':'dogecoin', 'eth':'ethereum' };
+    // ===== Edit this faucets array to add/remove faucets =====
+    // Each entry: {coin:'btc'|'doge'|'ltc'|'eth', name:'Site', reward:'0.001 satoshi', timer:'5 min', url:'https://...'}
+    const faucets = [
+      {coin:'btc', name:'ChessFaucet', reward:'0.01772375 satoshi', timer:'1 min', url:'https://example.com/chessfaucet'},
+      {coin:'btc', name:'Bitcosite - Earn Simple Coin', reward:'0.04154352 satoshi', timer:'5 min', url:'https://example.com/bitcosite'},
+      {coin:'btc', name:'Bagi.Co.in - BTC', reward:'0.00028647 satoshi', timer:'10 min', url:'https://example.com/bagi-btc'},
+      {coin:'btc', name:'Contract-Miner', reward:'0.18143042 satoshi', timer:'1 min', url:'https://example.com/contract-miner'},
+      {coin:'doge', name:'Bitcosite - Earn Simple Coin', reward:'0.04154352 dogetoshi', timer:'5 min', url:'https://example.com/bitcosite-doge'},
+      {coin:'doge', name:'Keran.Co - DOGE', reward:'0.00022107 dogetoshi', timer:'25 min', url:'https://example.com/keran-doge'},
+      {coin:'ltc', name:'NFFaucet-Litecoin-HighPayout', reward:'0.00006452 litoshi', timer:'5 min', url:'https://example.com/nf-ltc'},
+      {coin:'eth', name:'Earn-Coins.com', reward:'0.00547913 gwei', timer:'5 min', url:'https://example.com/earn-coins'}
+      // add more here...
+    ];
+
+    // UI elements
+    const tableBody = document.querySelector('#faucetTable tbody');
+    const coinSelect = document.getElementById('coinSelect');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const pager = document.getElementById('pager');
+
+    // Pagination settings
+    const perPage = 12;
+    let currentPage = 1;
+
+    // Render function
+    function renderList() {
+      const coin = coinSelect.value;
+      const q = searchInput.value.trim().toLowerCase();
+      const filtered = faucets.filter(f => f.coin === coin && (q === '' || f.name.toLowerCase().includes(q) || f.reward.toLowerCase().includes(q)));
+      const total = filtered.length;
+      const pages = Math.max(1, Math.ceil(total / perPage));
+      if (currentPage > pages) currentPage = pages;
+
+      // slice
+      const start = (currentPage - 1) * perPage;
+      const pageItems = filtered.slice(start, start + perPage);
+
+      // fill table
+      tableBody.innerHTML = '';
+      if (pageItems.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="5" style="color:var(--muted)">No results found.</td>`;
+        tableBody.appendChild(tr);
+      } else {
+        for (const item of pageItems) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><div class="coin-icon">${item.coin.toUpperCase()}</div></td>
+            <td><a href="${item.url}" target="_blank" rel="noopener noreferrer" style="color:#eaf9f4;font-weight:700">${item.name}</a></td>
+            <td class="muted">${item.reward}</td>
+            <td class="muted">${item.timer}</td>
+            <td><a class="visit" href="${item.url}" target="_blank" rel="noopener noreferrer">Visit</a></td>
+          `;
+          tableBody.appendChild(tr);
+        }
+      }
+
+      // pagination buttons
+      pager.innerHTML = '';
+      const createBtn = (label, page, active=false) => {
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        if (active) btn.classList.add('active');
+        btn.addEventListener('click', () => { currentPage = page; renderList(); });
+        return btn;
+      };
+
+      if (pages > 1) {
+        const startPage = Math.max(1, currentPage - 3);
+        const endPage = Math.min(pages, currentPage + 3);
+        if (currentPage > 1) {
+          pager.appendChild(createBtn('First', 1));
+          pager.appendChild(createBtn('Prev', currentPage - 1));
+        }
+        for (let p = startPage; p <= endPage; p++) {
+          pager.appendChild(createBtn(p, p, p === currentPage));
+        }
+        if (currentPage < pages) {
+          pager.appendChild(createBtn('Next', currentPage + 1));
+          pager.appendChild(createBtn('Last', pages));
+        }
+      }
+    }
+
+    searchBtn.addEventListener('click', () => { currentPage = 1; renderList(); });
+    resetBtn.addEventListener('click', () => { coinSelect.value='btc'; searchInput.value=''; currentPage = 1; renderList(); });
+    coinSelect.addEventListener('change', () => { currentPage = 1; renderList(); });
+
+    // initial render
+    renderList();
+
+    // Live prices: CoinGecko public API (client-side)
+    const coinMap = { btc:'bitcoin', doge:'dogecoin', ltc:'litecoin', eth:'ethereum' };
     async function loadPrices() {
       try {
         const ids = Object.values(coinMap).join(',');
@@ -244,6 +287,7 @@ function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE
         const data = await res.json();
         const container = document.getElementById('prices');
         container.innerHTML = '';
+        const footerParts = [];
         for (const [sym,id] of Object.entries(coinMap)) {
           const info = data[id];
           if (!info) continue;
@@ -251,9 +295,12 @@ function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE
           const change = info.usd_24h_change || 0;
           const el = document.createElement('div');
           el.className = 'price ' + (change >= 0 ? 'up' : 'down');
-          el.innerHTML = `<strong style="margin-right:8px">${sym.toUpperCase()}</strong> $${price.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:8})} <span style="font-weight:600">(${change>=0?'+':''}${change.toFixed(2)}%)</span>`;
+          el.innerHTML = `<strong style="margin-right:6px">${sym.toUpperCase()}</strong> $${price.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:8})} (${change>=0?'+':''}${change.toFixed(2)}%)`;
           container.appendChild(el);
+          footerParts.push(`${sym.toUpperCase()}: $${price.toFixed(2)}`);
         }
+        const footer = document.getElementById('footer-prices');
+        if (footer) footer.textContent = footerParts.join(' • ');
       } catch (e) {
         console.error('price error', e);
         document.getElementById('prices').textContent = 'Prices unavailable';
