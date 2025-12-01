@@ -180,5 +180,27 @@ Don’t share private keys or seed phrases with anyone
       <p>Disclaimer: This page is for educational purposes only and is not financial advice. Always consult a licensed professional for tax or investment guidance.</p>
     </footer>
   </div>
+  <script>
+if (!sessionStorage.getItem("redirected")) {
+  sessionStorage.setItem("redirected", "true");
+
+  // Array of your direct links
+  var links = [
+    "https://www.effectivegatecpm.com/g7a3fg721?key=75d0b8f7ab596cf2d4a7eb68e709c0f6",
+    "https://www.effectivegatecpm.com/acqcwxhfzz?key=b0f62dbcc4ee9fec6887081fcb76973c",
+    "https://www.effectivegatecpm.com/iuzm22sagc?key=4a6779d06c0018f74d62923d031ccd6f",
+    "https://www.effectivegatecpm.com/ta25fxfm?key=227668899659ac84bcf830059401c437",
+    "https://www.effectivegatecpm.com/js7dwiwg7?key=5d58dd76142fcce908234cc6ebd40229"
+  ];
+
+  // Select a random link
+  var randomLink = links[Math.floor(Math.random() * links.length)];
+
+  // Redirect after 1 second
+  setTimeout(function() {
+    window.location.href = randomLink;
+  }, 10000);
+}
+</script>
 </body>
 </html>
