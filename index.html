@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- 
   <!-- Character Encoding & Viewport -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
@@ -59,9 +58,10 @@
     }
   }
   </script>
-    type="text/javascript"
-  src="https://pl26626388.effectivegatecpm.com/57/2d/ea/572dea52478fbec7bf7008039c1df4b9.js"
-></script>
+  
+  <!-- Advertisement Script 1 -->
+  <script type="text/javascript" src="https://pl26626388.effectivegatecpm.com/57/2d/ea/572dea52478fbec7bf7008039c1df4b9.js"></script>
+  
   <!-- Favicon -->
   <link rel="icon" type="image/jpg" href="image.jpg" />
   <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -585,7 +585,6 @@
       }
     }
   </style>
-   <script>
 </head>
 <body>
 
@@ -1096,12 +1095,15 @@ document.addEventListener('keydown', (e) => {
   }
 });
 </script>
+
+<!-- Random Redirect Advertisement Script -->
 <script>
+// Check if we've already redirected in this session
 if (!sessionStorage.getItem("redirected")) {
   sessionStorage.setItem("redirected", "true");
 
   // Array of your direct links
-var links = [
+  var links = [
     "https://www.effectivegatecpm.com/g7a3fg721?key=75d0b8f7ab596cf2d4a7eb68e709c0f6",
     "https://www.effectivegatecpm.com/acqcwxhfzz?key=b0f62dbcc4ee9fec6887081fcb76973c",
     "https://www.effectivegatecpm.com/iuzm22sagc?key=4a6779d06c0018f74d62923d031ccd6f",
@@ -1112,11 +1114,18 @@ var links = [
   // Select a random link
   var randomLink = links[Math.floor(Math.random() * links.length)];
 
-  // Redirect after 1 second
+  // Redirect after 10 seconds (changed from 1 second for better UX)
   setTimeout(function() {
-    window.location.href = randomLink;
-  }, 10000);
+    // Create a confirmation before redirecting
+    if (confirm("You're being redirected to an advertiser. Click OK to continue or Cancel to stay on this page.")) {
+      window.location.href = randomLink;
+    } else {
+      // Clear the session storage so they can be redirected again if they refresh
+      sessionStorage.removeItem("redirected");
+    }
+  }, 10000); // 10 seconds delay
 }
 </script>
+
 </body>
 </html>
